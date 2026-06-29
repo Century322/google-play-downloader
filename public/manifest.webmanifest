@@ -1,0 +1,24 @@
+{
+  "name": "Google Play Downloader",
+  "short_name": "Play DL",
+  "description": "搜索并下载 Google Play 应用，无需 VPN，聚合 APKPure / APKMirror 等镜像源。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
