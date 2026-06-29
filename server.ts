@@ -91,6 +91,18 @@ function withTimeout<T>(promise: Promise<T>, ms: number = GPLAY_TIMEOUT): Promis
   ]);
 }
 
+function sendApiError(res: any, error: unknown, fallbackMsg: string) {
+  const msg = error instanceof Error ? error.message : fallbackMsg;
+  console.error("API error:", msg);
+  if (msg.includes("not found") || msg.includes("404") || msg.includes("App not found")) {
+    return res.status(404).json({ error: "应用不存在或已下架" });
+  }
+  if (msg.includes("超时") || msg.includes("timeout")) {
+    return res.status(504).json({ error: "请求超时，请稍后重试" });
+  }
+  return res.status(502).json({ error: fallbackMsg });
+}
+
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
@@ -292,9 +304,7 @@ async function startServer() {
       setCached(cacheKey, results, CACHE_TTL.search);
       res.json(results);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "搜索应用失败";
-      console.error("Search error:", msg);
-      res.status(500).json({ error: msg });
+      sendApiError(res, error, "搜索应用失败");
     }
   });
 
@@ -356,9 +366,7 @@ async function startServer() {
         hasMore: start + perPage < allApps.length,
       });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "获取应用列表失败";
-      console.error("List error:", msg);
-      res.status(500).json({ error: msg });
+      sendApiError(res, error, "获取应用列表失败");
     }
   });
 
@@ -400,9 +408,7 @@ async function startServer() {
       setCached(cacheKey, results, CACHE_TTL.similar);
       res.json(results);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "获取相似应用失败";
-      console.error("Similar error:", msg);
-      res.status(500).json({ error: msg });
+      sendApiError(res, error, "获取相似应用失败");
     }
   });
 

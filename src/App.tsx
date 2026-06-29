@@ -321,7 +321,7 @@ export default function App() {
               <h2 className="text-xl font-bold text-slate-900">
                 搜索结果: <span className="text-blue-600">"{searchQuery}"</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-1">找到约 {apps.length} 个相关应用</p>
+              <p className="text-xs text-slate-400 mt-1">找到 {apps.length} 个应用</p>
             </div>
           ) : (
             <div className="flex gap-2 border-b sm:border-b-0 border-slate-200 sm:pb-0 overflow-x-auto pb-1">

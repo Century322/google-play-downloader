@@ -12,6 +12,7 @@ export default function SearchBox({ onSearch, initialValue = "", placeholder = "
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -64,6 +65,10 @@ export default function SearchBox({ onSearch, initialValue = "", placeholder = "
     };
   }, [query]);
 
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [suggestions]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
@@ -83,6 +88,37 @@ export default function SearchBox({ onSearch, initialValue = "", placeholder = "
     setSuggestions([]);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) {
+      if (e.key === "Escape" && query) {
+        handleClear();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActiveIndex((prev) => (prev + 1) % suggestions.length);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActiveIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+        break;
+      case "Enter":
+        if (activeIndex >= 0 && activeIndex < suggestions.length) {
+          e.preventDefault();
+          handleSuggestionClick(suggestions[activeIndex]);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        setShowSuggestions(false);
+        setActiveIndex(-1);
+        break;
+    }
+  };
+
   return (
     <div className="relative w-full max-w-2xl mx-auto" ref={containerRef}>
       <form onSubmit={handleSubmit} className="relative">
@@ -95,7 +131,13 @@ export default function SearchBox({ onSearch, initialValue = "", placeholder = "
               setShowSuggestions(true);
             }}
             onFocus={() => setShowSuggestions(true)}
+            onKeyDown={handleKeyDown}
             placeholder={placeholder}
+            role="combobox"
+            aria-expanded={showSuggestions && suggestions.length > 0}
+            aria-controls="search-suggestions"
+            aria-autocomplete="list"
+            aria-activedescendant={activeIndex >= 0 ? `suggestion-${activeIndex}` : undefined}
             className="w-full pl-12 pr-12 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-slate-800 placeholder-slate-400 font-sans text-base"
           />
           <Search className="absolute left-4 w-5 h-5 text-slate-400 pointer-events-none" />
@@ -107,6 +149,7 @@ export default function SearchBox({ onSearch, initialValue = "", placeholder = "
               type="button"
               onClick={handleClear}
               className="absolute right-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              aria-label="清除搜索"
             >
               <X className="w-4 h-4" />
             </button>
@@ -116,13 +159,16 @@ export default function SearchBox({ onSearch, initialValue = "", placeholder = "
 
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden z-20">
-          <ul className="py-2">
+          <ul className="py-2" role="listbox" id="search-suggestions">
             {suggestions.map((suggestion, index) => (
-              <li key={index}>
+              <li key={index} role="option" id={`suggestion-${index}`} aria-selected={index === activeIndex}>
                 <button
                   type="button"
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="w-full px-5 py-3 text-left text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-3 font-sans"
+                  onMouseEnter={() => setActiveIndex(index)}
+                  className={`w-full px-5 py-3 text-left transition-colors flex items-center gap-3 font-sans ${
+                    index === activeIndex ? "bg-blue-50 text-blue-700" : "text-slate-700 hover:bg-slate-50"
+                  }`}
                 >
                   <Search className="w-4 h-4 text-slate-400" />
                   <span>{suggestion}</span>
