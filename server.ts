@@ -120,21 +120,45 @@ const APKPURE_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 async function fetchApkPureVersions(appId: string): Promise<VersionEntry[]> {
-  const url = `https://apkpure.com/${appId}/old-versions`;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
+  const timer = setTimeout(() => controller.abort(), 15000);
   try {
-    const res = await fetch(url, {
+    // APKPure 需要先访问应用主页，获取重定向后带 slug 的 URL
+    const homeUrl = `https://apkpure.com/${appId}`;
+    const homeRes = await fetch(homeUrl, {
       headers: {
         "User-Agent": APKPURE_UA,
         Accept: "text/html,application/xhtml+xml",
         "Accept-Language": "en-US,en;q=0.9",
       },
       signal: controller.signal,
+      redirect: "follow",
     });
-    if (!res.ok) return [];
-    const html = await res.text();
-    return parseApkPureVersions(html);
+    if (!homeRes.ok) {
+      console.error(`APKPure home fetch failed: ${homeRes.status} for ${appId}`);
+      return [];
+    }
+    const finalUrl = homeRes.url || homeUrl;
+
+    // 尝试 /old-versions 和 /versions 两个路径
+    for (const suffix of ["/old-versions", "/versions"]) {
+      const versionsUrl = `${finalUrl}${suffix}`;
+      const versionsRes = await fetch(versionsUrl, {
+        headers: {
+          "User-Agent": APKPURE_UA,
+          Accept: "text/html,application/xhtml+xml",
+          "Accept-Language": "en-US,en;q=0.9",
+          Referer: finalUrl,
+        },
+        signal: controller.signal,
+      });
+      if (!versionsRes.ok) continue;
+      const html = await versionsRes.text();
+      const versions = parseApkPureVersions(html);
+      console.log(`APKPure ${suffix} for ${appId}: ${versions.length} versions (HTML ${html.length} bytes, url ${versionsUrl})`);
+      if (versions.length > 0) return versions;
+    }
+    return [];
   } finally {
     clearTimeout(timer);
   }
