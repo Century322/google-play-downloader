@@ -501,13 +501,11 @@ async function startServer() {
 
     const format = await getCachedFormat(appId);
 
-    if (format === "apk") {
-      return res.redirect(302, `https://d.apkpure.com/b/APK/${appId}?version=latest`);
-    }
     if (format === "xapk") {
       return res.redirect(302, `https://d.apkpure.com/b/XAPK/${appId}?version=latest`);
     }
-    return res.redirect(302, `https://apkpure.com/${appId}`);
+    // 格式未知时默认尝试 APK（大多数应用都提供 APK 格式）
+    return res.redirect(302, `https://d.apkpure.com/b/APK/${appId}?version=latest`);
   });
 
   app.get("/api/download-info", downloadLimiter, async (req, res) => {
@@ -518,12 +516,6 @@ async function startServer() {
 
     const format = await getCachedFormat(appId);
 
-    if (format === "apk") {
-      return res.json({
-        format: "apk",
-        url: `https://d.apkpure.com/b/APK/${appId}?version=latest`,
-      });
-    }
     if (format === "xapk") {
       return res.json({
         format: "xapk",
@@ -531,10 +523,10 @@ async function startServer() {
         warning: "该应用仅提供 XAPK 格式，需安装 XAPK 安装器（如 APKPure 应用）才能安装。",
       });
     }
+    // 格式为 apk 或 unknown 时，默认提供 APK 下载链接（不跳转外部页面）
     return res.json({
-      format: "unknown",
-      url: `https://apkpure.com/${appId}`,
-      warning: "无法自动检测下载格式，已跳转到 APKPure 应用页，请手动选择。",
+      format: "apk",
+      url: `https://d.apkpure.com/b/APK/${appId}?version=latest`,
     });
   });
 
