@@ -326,9 +326,7 @@ async function startServer() {
       setCached(cacheKey, details, CACHE_TTL.app);
       res.json(details);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "获取应用详情失败";
-      console.error("Details error:", msg);
-      res.status(500).json({ error: msg });
+      sendApiError(res, error, "获取应用详情失败");
     }
   });
 
@@ -384,9 +382,7 @@ async function startServer() {
       setCached(cacheKey, results, CACHE_TTL.suggest);
       res.json(results);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "获取建议失败";
-      console.error("Suggest error:", msg);
-      res.status(500).json({ error: msg });
+      sendApiError(res, error, "获取建议失败");
     }
   });
 
@@ -462,9 +458,7 @@ async function startServer() {
       setCached(cacheKey, data, CACHE_TTL.reviews);
       res.json(data);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "获取评论失败";
-      console.error("Reviews error:", msg);
-      res.status(500).json({ error: msg });
+      sendApiError(res, error, "获取评论失败");
     }
   });
 
