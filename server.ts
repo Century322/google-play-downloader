@@ -493,9 +493,7 @@ async function startServer() {
       setCached(cacheKey, result, CACHE_TTL.datasafety);
       res.json(result);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "获取数据安全信息失败";
-      console.error("DataSafety error:", msg);
-      res.status(500).json({ error: msg });
+      sendApiError(res, error, "获取数据安全信息失败");
     }
   });
 
