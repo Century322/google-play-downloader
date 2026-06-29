@@ -473,7 +473,7 @@ async function startServer() {
       if (cached) return res.json(cached);
 
       const [dataSafetyResult, permissionsResult] = await Promise.all([
-        withTimeout(gplay.dataSafety({ appId, lang: LANG })).catch(() => null) as Promise<any>,
+        withTimeout((gplay.datasafety || gplay.dataSafety)({ appId, lang: LANG })).catch(() => null) as Promise<any>,
         withTimeout(gplay.permissions({ appId, lang: LANG, country: COUNTRY, short: true })).catch(() => []) as Promise<any>,
       ]);
 
